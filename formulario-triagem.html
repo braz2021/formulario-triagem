@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atendimento com triagem inteligente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f4;--surface:#fff;--ink:#14262e;--muted:#55676f;--line:#cbd6db;--accent:#0e6b7a;--on-accent:#fff;--crit:#c0392b;--high:#c9701a;--med:#3b6fb6;--low:#3f7d4e;--err:#b3261e;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1b20;--surface:#16262d;--ink:#e6eef1;--muted:#9fb1b8;--line:#2b3f47;--accent:#4cc0d1;--on-accent:#06242a;--crit:#ff7b6b;--high:#f0a050;--med:#7fa8e6;--low:#74c288;--err:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1b20;--surface:#16262d;--ink:#e6eef1;--muted:#9fb1b8;--line:#2b3f47;--accent:#4cc0d1;--on-accent:#06242a;--crit:#ff7b6b;--high:#f0a050;--med:#7fa8e6;--low:#74c288;--err:#ff8a80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+h1,h2{font-family:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;line-height:1.15;margin:0}
+h1{font-size:clamp(28px,5vw,40px);max-width:18ch}
+.lead{color:var(--muted);max-width:60ch;margin:10px 0 26px}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px}
+.field{margin-bottom:16px}
+label,.lbl{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.opt{font-weight:400;color:var(--muted)}
+input[type=text],input[type=email],input[type=tel],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+textarea{min-height:130px;resize:vertical}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[aria-invalid=true]{border-color:var(--err)}
+.err{color:var(--err);font-size:13px;min-height:18px;margin-top:4px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+.radios{display:flex;gap:8px;flex-wrap:wrap}
+.radios label{margin:0;font-weight:500;border:1px solid var(--line);border-radius:6px;padding:8px 14px;cursor:pointer;background:var(--bg)}
+.radios input{position:absolute;opacity:0}
+.radios label:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent);font-weight:600}
+.radios label:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.count{font-size:13px;color:var(--muted);text-align:right}
+.consent{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px}
+.consent input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent)}
+button{font:inherit;font-weight:600;border-radius:6px;cursor:pointer;padding:11px 20px;border:1px solid var(--accent)}
+.primary{background:var(--accent);color:var(--on-accent)}
+.ghost{background:transparent;color:var(--accent)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.panel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+@media(max-width:820px){.panel{position:static}}
+.empty{color:var(--muted)}
+.level{display:flex;align-items:baseline;gap:10px;margin:10px 0 8px}
+.level strong{font:700 30px "Bricolage Grotesque",sans-serif}
+.bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:16px}
+.bar i{height:8px;border-radius:4px;background:var(--line)}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+dt{color:var(--muted)} dd{margin:0;font-weight:600}
+.sig{margin:12px 0 0;padding:0;list-style:none;display:flex;gap:6px;flex-wrap:wrap}
+.sig li{border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:13px}
+.reply{margin-top:16px;padding:14px;border-left:4px solid var(--accent);background:var(--bg);border-radius:0 6px 6px 0;font-size:15px;white-space:pre-wrap}
+.ok{border:1px solid var(--low);border-radius:10px;padding:16px;margin-top:22px;background:var(--surface)}
+.ok h2{font-size:22px;margin-bottom:6px}
+.queue{margin-top:26px}
+.queue-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.queue h2{font-size:22px}
+.q{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.tag{font-size:13px;font-weight:700;border-radius:4px;padding:2px 9px;border:1px solid currentColor}
+.q small{color:var(--muted);display:block}
+input[type=file]{font:inherit;width:100%}
+.files{font-size:13px;color:var(--muted);margin-top:4px}
+.counts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+@media(max-width:560px){.counts{grid-template-columns:repeat(2,1fr)}}
+.counts div{border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.counts strong{font:700 24px "Bricolage Grotesque",sans-serif;display:block;line-height:1.2}
+.counts span{font-size:13px;color:var(--muted)}
+#csvbox{margin-top:12px;min-height:110px}
+.hidden{display:none}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Conte o que aconteceu. Nós direcionamos ao time certo.</h1>
+  <p class="lead">Enquanto você escreve, o formulário avalia a urgência e indica qual equipe vai responder e em quanto tempo.</p>
+
+  <div class="grid">
+    <form id="f" class="card" novalidate>
+      <div class="row">
+        <div class="field">
+          <label for="nome">Nome completo</label>
+          <input type="text" id="nome" name="nome" autocomplete="name">
+          <div class="err" id="e-nome" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" autocomplete="email" inputmode="email">
+          <div class="err" id="e-email" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="tel">Telefone <span class="opt" id="tel-opt">(opcional)</span></label>
+          <input type="tel" id="tel" name="tel" autocomplete="tel" inputmode="tel" placeholder="(61) 99999-9999">
+          <div class="err" id="e-tel" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label for="cat">Assunto</label>
+          <select id="cat" name="cat">
+            <option value="">Escolha um assunto</option>
+            <option value="duvida">Dúvida</option>
+            <option value="tecnico">Problema técnico</option>
+            <option value="financeiro">Cobrança ou pagamento</option>
+            <option value="cancelamento">Cancelamento</option>
+            <option value="sugestao">Elogio ou sugestão</option>
+            <option value="outro">Outro</option>
+          </select>
+          <div class="err" id="e-cat" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl" id="canal-l">Como prefere receber a resposta?</span>
+        <div class="radios" role="radiogroup" aria-labelledby="canal-l">
+          <label><input type="radio" name="canal" value="E-mail" checked>E-mail</label>
+          <label><input type="radio" name="canal" value="WhatsApp">WhatsApp</label>
+          <label><input type="radio" name="canal" value="Telefone">Telefone</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="msg">Descreva sua situação</label>
+        <textarea id="msg" name="msg" placeholder="Ex.: fui cobrado duas vezes na fatura de outubro e preciso do estorno."></textarea>
+        <div class="count" id="count">0 / mínimo 20 caracteres</div>
+        <div class="err" id="e-msg" aria-live="polite"></div>
+      </div>
+      <div class="field">
+        <label for="anexo">Anexos <span class="opt">(opcional, até 3 arquivos de 5 MB: PNG, JPG ou PDF)</span></label>
+        <input type="file" id="anexo" multiple accept=".png,.jpg,.jpeg,.pdf">
+        <div class="files" id="anexo-l">Nesta demonstração os arquivos não são enviados; só a quantidade entra no protocolo.</div>
+        <div class="err" id="e-anexo" aria-live="polite"></div>
+      </div>
+      <div class="field">
+        <label class="consent"><input type="checkbox" id="lgpd"> <span>Autorizo o uso destes dados apenas para o meu atendimento, conforme a LGPD.</span></label>
+        <div class="err" id="e-lgpd" aria-live="polite"></div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="primary">Enviar atendimento</button>
+        <button type="button" class="ghost" id="reset">Limpar formulário</button>
+      </div>
+    </form>
+
+    <aside class="card panel" aria-labelledby="pt">
+      <h2 id="pt" style="font-size:22px">Triagem ao vivo</h2>
+      <div id="live" aria-live="polite"></div>
+    </aside>
+  </div>
+
+  <div class="ok hidden" id="ok" tabindex="-1"></div>
+
+  <section class="queue card" aria-labelledby="qt">
+    <div class="queue-h">
+      <h2 id="qt">Fila de atendimento</h2>
+      <div class="actions" style="margin:0"><button type="button" class="ghost" id="csv">Copiar CSV</button><button type="button" class="ghost" id="clear">Limpar fila</button></div>
+    </div>
+    <div class="counts" id="counts"></div>
+    <div id="queue"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+var LV=[
+ {k:'baixa',n:'Baixa',c:'var(--low)',sla:'3 dias úteis',on:1},
+ {k:'media',n:'Média',c:'var(--med)',sla:'1 dia útil',on:2},
+ {k:'alta',n:'Alta',c:'var(--high)',sla:'até 4 horas',on:3},
+ {k:'critica',n:'Crítica',c:'var(--crit)',sla:'até 1 hora',on:4}];
+var BASE={duvida:0,tecnico:2,financeiro:2,cancelamento:3,sugestao:0,outro:1};
+var CATN={duvida:'Dúvida',tecnico:'Problema técnico',financeiro:'Cobrança ou pagamento',cancelamento:'Cancelamento',sugestao:'Elogio ou sugestão',outro:'Outro'};
+var DEPT={duvida:'Atendimento geral',tecnico:'Suporte técnico',financeiro:'Financeiro',cancelamento:'Retenção de clientes',sugestao:'Experiência do cliente',outro:'Atendimento geral'};
+var CRIT=[['urgente','urgência'],['fora do ar','serviço fora do ar'],['nao funciona','algo não funciona'],['parou de','algo parou'],['fraude','suspeita de fraude'],['clonado','suspeita de fraude'],['cobrado duas','cobrança em duplicidade'],['cobranca indevida','cobrança indevida'],['procon','menção ao Procon'],['processo','menção a processo'],['advogado','menção a advogado'],['bloqueado','acesso bloqueado'],['bloquearam','acesso bloqueado'],['nao consigo acessar','sem acesso']];
+var NEG=[['pessimo','insatisfação'],['absurdo','insatisfação'],['inaceitavel','insatisfação'],['revoltado','insatisfação'],['cansado','insatisfação'],['ninguem responde','sem retorno anterior'],['ja liguei','contato anterior sem solução'],['de novo','problema recorrente'],['mais uma vez','problema recorrente']];
+var DEPTKW=[[/senha|login|erro|aplicativo|\bapp\b|site/,'Suporte técnico'],[/fatura|boleto|estorno|reembolso|cobran|pagamento/,'Financeiro']];
+
+function $(id){return document.getElementById(id)}
+function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+function analyze(cat,msg){
+  var t=norm(msg),score=cat?BASE[cat]:0,sig=[],seen={};
+  CRIT.forEach(function(p){if(t.indexOf(p[0])>-1&&!seen[p[1]]){seen[p[1]]=1;score+=3;sig.push(p[1])}});
+  NEG.forEach(function(p){if(t.indexOf(p[0])>-1&&!seen[p[1]]){seen[p[1]]=1;score+=1;sig.push(p[1])}});
+  if((msg.match(/!/g)||[]).length>=3){score+=1;sig.push('tom enfático')}
+  var lv=score>=6?3:score>=4?2:score>=2?1:0;
+  var dept=cat?DEPT[cat]:'Atendimento geral';
+  if(cat==='duvida'||cat==='outro'){for(var i=0;i<DEPTKW.length;i++){if(DEPTKW[i][0].test(t)){dept=DEPTKW[i][1];break}}}
+  return {lv:LV[lv],idx:lv,score:score,sig:sig,dept:dept};
+}
+
+function replyText(name,a,cat,canal,proto){
+  var first=(name||'').trim().split(/\s+/)[0]||'cliente';
+  var open={critica:'Entendemos que a situação é urgente e já a colocamos no topo da fila.',alta:'Obrigado por explicar com clareza. Seu caso tem prioridade alta.',media:'Recebemos sua mensagem e já direcionamos ao time responsável.',baixa:'Obrigado pelo contato. Sua mensagem foi registrada.'}[a.lv.k];
+  var tail=cat==='sugestao'?' Seu retorno ajuda a melhorar o nosso serviço.':' Se tiver prints ou comprovantes, envie na resposta.';
+  return 'Olá, '+first+'! '+open+' O time de '+a.dept+' responde '+a.lv.sla+' por '+canal+'.'+tail+(proto?' Protocolo: '+proto+'.':'');
+}
+
+function renderLive(){
+  var cat=$('cat').value,msg=$('msg').value,box=$('live');
+  if(!cat&&msg.trim().length<10){box.innerHTML='<p class="empty">Escolha o assunto e comece a descrever o caso para ver a prioridade, a equipe e o prazo.</p>';return}
+  var a=analyze(cat,msg),canal=document.querySelector('input[name=canal]:checked').value;
+  var bar='';for(var i=0;i<4;i++){bar+='<i style="'+(i<a.lv.on?'background:'+a.lv.c:'')+'"></i>'}
+  var sig=a.sig.length?'<ul class="sig">'+a.sig.map(function(s){return '<li>'+esc(s)+'</li>'}).join('')+'</ul>':'';
+  box.innerHTML='<div class="level"><span class="opt">Prioridade</span><strong style="color:'+a.lv.c+'">'+a.lv.n+'</strong></div><div class="bar" aria-hidden="true">'+bar+'</div>'+
+  '<dl><dt>Equipe</dt><dd>'+esc(a.dept)+'</dd><dt>Prazo de resposta</dt><dd>'+a.lv.sla+'</dd><dt>Canal</dt><dd>'+canal+'</dd></dl>'+sig+
+  '<div class="reply">'+esc(replyText($('nome').value,a,cat,canal,''))+'</div>';
+}
+
+function maskTel(v){
+  var d=v.replace(/\D/g,'').slice(0,11);
+  if(d.length>6)return '('+d.slice(0,2)+') '+d.slice(2,d.length>10?7:6)+'-'+d.slice(d.length>10?7:6);
+  if(d.length>2)return '('+d.slice(0,2)+') '+d.slice(2);
+  return d;
+}
+
+var rules={
+  nome:function(v){return v.trim().length<3?'Informe seu nome completo.':''},
+  email:function(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())?'':'Informe um e-mail válido, como nome@exemplo.com.'},
+  tel:function(v){
+    var need=document.querySelector('input[name=canal]:checked').value!=='E-mail',d=v.replace(/\D/g,'');
+    if(!d)return need?'Informe um telefone para receber a resposta por este canal.':'';
+    return (d.length===10||d.length===11)?'':'Use DDD e número: (61) 99999-9999.';
+  },
+  cat:function(v){return v?'':'Escolha o assunto do atendimento.'},
+  msg:function(v){return v.trim().length<20?'Descreva o caso com pelo menos 20 caracteres.':''},
+  anexo:function(){
+    var fs=$('anexo').files;
+    if(fs.length>3)return 'Anexe no máximo 3 arquivos.';
+    for(var i=0;i<fs.length;i++){
+      if(!/\.(png|jpe?g|pdf)$/i.test(fs[i].name))return fs[i].name+': use PNG, JPG ou PDF.';
+      if(fs[i].size>5*1024*1024)return fs[i].name+': o arquivo passa de 5 MB.';
+    }
+    return '';
+  },
+  lgpd:function(){return $('lgpd').checked?'':'Marque a autorização para continuar.'}
+};
+function check(id){
+  var el=$(id),v=id==='lgpd'?'':el.value,m=rules[id](v);
+  $('e-'+id).textContent=m;
+  if(id!=='lgpd')el.setAttribute('aria-invalid',m?'true':'false');
+  return !m;
+}
+
+/* armazenamento local, protegido contra falhas */
+var KEY='atendimentos-triagem';
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')||[]}catch(e){return mem}}
+var mem=[];
+function save(list){mem=list;try{localStorage.setItem(KEY,JSON.stringify(list))}catch(e){}}
+
+function renderQueue(){
+  var list=load().slice().sort(function(a,b){return b.idx-a.idx||b.t-a.t}),q=$('queue');
+  var cn=[0,0,0,0];list.forEach(function(x){cn[x.idx]++});
+  $('counts').innerHTML=[3,2,1,0].map(function(i){return '<div><strong style="color:'+LV[i].c+'">'+cn[i]+'</strong><span>'+LV[i].n+'</span></div>'}).join('');
+  if(!list.length){q.innerHTML='<p class="empty">Nenhum atendimento enviado ainda. Preencha o formulário acima para criar o primeiro.</p>';return}
+  q.innerHTML=list.map(function(x){
+    return '<div class="q"><span class="tag" style="color:'+LV[x.idx].c+'">'+LV[x.idx].n+'</span><div><strong>'+esc(x.nome)+'</strong> · '+esc(x.cat)+'<small>'+esc(x.proto)+' · '+esc(x.dept)+' · responde '+LV[x.idx].sla+(x.anexos?' · '+x.anexos+(x.anexos>1?' anexos':' anexo'):'')+'</small></div><small>'+esc(x.canal)+'</small></div>';
+  }).join('');
+}
+
+function proto(){
+  var d=new Date(),p=function(n){return String(n).padStart(2,'0')};
+  return 'ATD-'+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+'-'+Math.floor(1000+Math.random()*9000);
+}
+
+$('f').addEventListener('submit',function(e){
+  e.preventDefault();
+  var ids=['nome','email','tel','cat','msg','anexo','lgpd'],ok=true,first=null;
+  ids.forEach(function(id){if(!check(id)){ok=false;if(!first)first=$(id)}});
+  if(!ok){first.focus();return}
+  var cat=$('cat').value,msg=$('msg').value,canal=document.querySelector('input[name=canal]:checked').value;
+  var a=analyze(cat,msg),p=proto(),txt=replyText($('nome').value,a,cat,canal,p);
+  var list=load();
+  list.push({nome:$('nome').value.trim(),cat:CATN[cat],dept:a.dept,idx:a.idx,canal:canal,proto:p,t:Date.now(),anexos:$('anexo').files.length});
+  save(list);
+  var okb=$('ok');
+  okb.innerHTML='<h2>Atendimento enviado</h2><p>Protocolo <strong>'+p+'</strong>. Prioridade <strong style="color:'+a.lv.c+'">'+a.lv.n+'</strong>, equipe de '+esc(a.dept)+'.</p><div class="reply">'+esc(txt)+'</div><div class="actions"><button type="button" class="ghost" id="copy">Copiar resposta</button></div>';
+  okb.classList.remove('hidden');okb.focus();
+  $('copy').onclick=function(){
+    var b=this;
+    try{navigator.clipboard.writeText(txt).then(function(){b.textContent='Resposta copiada'},function(){b.textContent='Selecione e copie o texto acima'})}catch(x){b.textContent='Selecione e copie o texto acima'}
+  };
+  $('f').reset();
+  ['nome','email','tel','cat','msg'].forEach(function(id){$('e-'+id).textContent='';$(id).removeAttribute('aria-invalid')});
+  $('e-lgpd').textContent='';$('count').textContent='0 / mínimo 20 caracteres';$('tel-opt').textContent='(opcional)';
+  renderLive();renderQueue();
+});
+
+['nome','email','tel','cat','msg'].forEach(function(id){$(id).addEventListener('blur',function(){check(id)})});
+$('lgpd').addEventListener('change',function(){check('lgpd')});
+$('tel').addEventListener('input',function(){this.value=maskTel(this.value)});
+$('msg').addEventListener('input',function(){var n=this.value.trim().length;$('count').textContent=n+' / mínimo 20 caracteres';renderLive()});
+$('cat').addEventListener('change',renderLive);
+$('nome').addEventListener('input',renderLive);
+Array.prototype.forEach.call(document.querySelectorAll('input[name=canal]'),function(r){
+  r.addEventListener('change',function(){
+    $('tel-opt').textContent=this.value==='E-mail'?'(opcional)':'(obrigatório para este canal)';
+    if($('tel').getAttribute('aria-invalid'))check('tel');
+    renderLive();
+  });
+});
+$('reset').addEventListener('click',function(){
+  $('f').reset();
+  ['nome','email','tel','cat','msg','lgpd'].forEach(function(id){$('e-'+id).textContent='';if(id!=='lgpd')$(id).removeAttribute('aria-invalid')});
+  $('count').textContent='0 / mínimo 20 caracteres';$('tel-opt').textContent='(opcional)';renderLive();
+});
+$('clear').addEventListener('click',function(){save([]);renderQueue()});
+
+$('anexo').addEventListener('change',function(){
+  var m=rules.anexo();$('e-anexo').textContent=m;this.setAttribute('aria-invalid',m?'true':'false');
+  var n=[].map.call(this.files,function(f){return f.name});
+  $('anexo-l').textContent=n.length?n.join(', '):'Nesta demonstração os arquivos não são enviados; só a quantidade entra no protocolo.';
+});
+$('f').addEventListener('reset',function(){
+  $('anexo-l').textContent='Nesta demonstração os arquivos não são enviados; só a quantidade entra no protocolo.';
+  $('e-anexo').textContent='';$('anexo').removeAttribute('aria-invalid');
+});
+$('csv').addEventListener('click',function(){
+  var b=this,list=load();
+  if(!list.length){b.textContent='A fila está vazia';return}
+  var rows=[['protocolo','nome','assunto','equipe','prioridade','canal','anexos']].concat(list.map(function(x){return [x.proto,x.nome,x.cat,x.dept,LV[x.idx].n,x.canal,x.anexos||0]}));
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"'}).join(';')}).join('\n');
+  function show(){
+    var ta=document.getElementById('csvbox');
+    if(!ta){ta=document.createElement('textarea');ta.id='csvbox';ta.readOnly=true;ta.setAttribute('aria-label','CSV da fila');$('queue').parentNode.appendChild(ta)}
+    ta.value=csv;ta.select();b.textContent='Copie o CSV abaixo';
+  }
+  try{navigator.clipboard.writeText(csv).then(function(){b.textContent='CSV copiado'},show)}catch(x){show()}
+});
+renderLive();renderQueue();
+})();
+</script>
+</body>
+</html>
